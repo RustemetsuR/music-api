@@ -5,7 +5,7 @@ const TrackHistory = require("../models/TrackHistory");
 
 router.get("/", async (req, res) => {
     const trackHistory = await TrackHistory.find();
-    res.send(trackHistory)
+    res.send(trackHistory);
 });
 
 router.post("/", async (req, res) => {
@@ -16,19 +16,20 @@ router.post("/", async (req, res) => {
     const user = await User.findOne({token});
     if(!user){
         return res.status(401).send({error: "Wrong token"});
-    }
-    const track = await Track.findById(req.body.track);
+    };
+    const trackID = req.get("track");
+    const track = await Track.findById(trackID);
     if (!track) {
-        return res.status(400).send('Track does not exist');
+        return res.status(400).send({error: 'Track does not exist'});
     } else {
-        const date = new Date();
-        req.body.dateTime = date.toISOString();
+        req.body.dateTime = new Date().toISOString();
+        req.body.track = trackID;
         const trackHistory = new TrackHistory(req.body);
         try {
             await trackHistory.save();
             res.send(trackHistory);
         } catch (e) {
-            res.send(e);
+            res.status(400).send(e);
         };
     };
 });
